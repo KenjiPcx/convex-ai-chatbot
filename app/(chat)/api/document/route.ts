@@ -1,126 +1,71 @@
-import { auth } from '@/app/(auth)/auth';
-import type { ArtifactKind } from '@/components/artifact';
-import {
-  deleteDocumentsByIdAfterTimestamp,
-  getDocumentsById,
-  saveDocument,
-} from '@/lib/db/queries';
-import { ChatSDKError } from '@/lib/errors';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
-
-  if (!id) {
-    return new ChatSDKError(
-      'bad_request:api',
-      'Parameter id is missing',
-    ).toResponse();
-  }
-
-  const session = await auth();
-
-  if (!session?.user) {
-    return new ChatSDKError('unauthorized:document').toResponse();
-  }
-
-  const documents = await getDocumentsById({ id });
-
-  const [document] = documents;
-
-  if (!document) {
-    return new ChatSDKError('not_found:document').toResponse();
-  }
-
-  if (document.userId !== session.user.id) {
-    return new ChatSDKError('forbidden:document').toResponse();
-  }
-
-  return Response.json(documents, { status: 200 });
-}
-
-export async function POST(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
-
-  if (!id) {
-    return new ChatSDKError(
-      'bad_request:api',
-      'Parameter id is required.',
-    ).toResponse();
-  }
-
-  const session = await auth();
-
-  if (!session?.user) {
-    return new ChatSDKError('not_found:document').toResponse();
-  }
-
-  const {
-    content,
-    title,
-    kind,
-  }: { content: string; title: string; kind: ArtifactKind } =
-    await request.json();
-
-  const documents = await getDocumentsById({ id });
-
-  if (documents.length > 0) {
-    const [document] = documents;
-
-    if (document.userId !== session.user.id) {
-      return new ChatSDKError('forbidden:document').toResponse();
+// Redirect to Convex HTTP actions
+export async function POST(request: NextRequest) {
+  try {
+    const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+    
+    if (!convexUrl) {
+      return NextResponse.json(
+        { error: 'Convex URL not configured' },
+        { status: 500 }
+      );
     }
+
+    const body = await request.text();
+    
+    const response = await fetch(`${convexUrl}/api/document`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(request.headers.get('authorization') && {
+          authorization: request.headers.get('authorization')!,
+        }),
+      },
+      body,
+    });
+
+    const data = await response.json();
+    return NextResponse.json(data, { status: response.status });
+  } catch (error) {
+    console.error('Document route error:', error);
+    return NextResponse.json(
+      { error: 'Failed to process document request' },
+      { status: 500 }
+    );
   }
-
-  const document = await saveDocument({
-    id,
-    content,
-    title,
-    kind,
-    userId: session.user.id,
-  });
-
-  return Response.json(document, { status: 200 });
 }
 
-export async function DELETE(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
-  const timestamp = searchParams.get('timestamp');
+export async function GET(request: NextRequest) {
+  try {
+    const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+    
+    if (!convexUrl) {
+      return NextResponse.json(
+        { error: 'Convex URL not configured' },
+        { status: 500 }
+      );
+    }
 
-  if (!id) {
-    return new ChatSDKError(
-      'bad_request:api',
-      'Parameter id is required.',
-    ).toResponse();
+    const searchParams = new URL(request.url).searchParams;
+    const queryString = searchParams.toString();
+    
+    const response = await fetch(`${convexUrl}/api/document${queryString ? `?${queryString}` : ''}`, {
+      method: 'GET',
+      headers: {
+        ...(request.headers.get('authorization') && {
+          authorization: request.headers.get('authorization')!,
+        }),
+      },
+    });
+
+    const data = await response.json();
+    return NextResponse.json(data, { status: response.status });
+  } catch (error) {
+    console.error('Document GET route error:', error);
+    return NextResponse.json(
+      { error: 'Failed to get document' },
+      { status: 500 }
+    );
   }
-
-  if (!timestamp) {
-    return new ChatSDKError(
-      'bad_request:api',
-      'Parameter timestamp is required.',
-    ).toResponse();
-  }
-
-  const session = await auth();
-
-  if (!session?.user) {
-    return new ChatSDKError('unauthorized:document').toResponse();
-  }
-
-  const documents = await getDocumentsById({ id });
-
-  const [document] = documents;
-
-  if (document.userId !== session.user.id) {
-    return new ChatSDKError('forbidden:document').toResponse();
-  }
-
-  const documentsDeleted = await deleteDocumentsByIdAfterTimestamp({
-    id,
-    timestamp: new Date(timestamp),
-  });
-
-  return Response.json(documentsDeleted, { status: 200 });
 }

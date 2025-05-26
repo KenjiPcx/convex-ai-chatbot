@@ -1,0 +1,7 @@
+{
+  "team": "convex-ai-chatbot",
+  "project": "convex-ai-chatbot",
+  "productionUrl": "",
+  "functions": "convex/",
+  "generateSourceMap": false
+}

@@ -1,75 +1,71 @@
-import { auth } from '@/app/(auth)/auth';
-import { getChatById, getVotesByChatId, voteMessage } from '@/lib/db/queries';
-import { ChatSDKError } from '@/lib/errors';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const chatId = searchParams.get('chatId');
+// Redirect to Convex HTTP actions
+export async function GET(request: NextRequest) {
+  try {
+    const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+    
+    if (!convexUrl) {
+      return NextResponse.json(
+        { error: 'Convex URL not configured' },
+        { status: 500 }
+      );
+    }
 
-  if (!chatId) {
-    return new ChatSDKError(
-      'bad_request:api',
-      'Parameter chatId is required.',
-    ).toResponse();
+    const searchParams = new URL(request.url).searchParams;
+    const queryString = searchParams.toString();
+    
+    const response = await fetch(`${convexUrl}/api/vote${queryString ? `?${queryString}` : ''}`, {
+      method: 'GET',
+      headers: {
+        ...(request.headers.get('authorization') && {
+          authorization: request.headers.get('authorization')!,
+        }),
+      },
+    });
+
+    const data = await response.json();
+    return NextResponse.json(data, { status: response.status });
+  } catch (error) {
+    console.error('Vote GET route error:', error);
+    return NextResponse.json(
+      { error: 'Failed to get votes' },
+      { status: 500 }
+    );
   }
-
-  const session = await auth();
-
-  if (!session?.user) {
-    return new ChatSDKError('unauthorized:vote').toResponse();
-  }
-
-  const chat = await getChatById({ id: chatId });
-
-  if (!chat) {
-    return new ChatSDKError('not_found:chat').toResponse();
-  }
-
-  if (chat.userId !== session.user.id) {
-    return new ChatSDKError('forbidden:vote').toResponse();
-  }
-
-  const votes = await getVotesByChatId({ id: chatId });
-
-  return Response.json(votes, { status: 200 });
 }
 
-export async function PATCH(request: Request) {
-  const {
-    chatId,
-    messageId,
-    type,
-  }: { chatId: string; messageId: string; type: 'up' | 'down' } =
-    await request.json();
+export async function PATCH(request: NextRequest) {
+  try {
+    const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+    
+    if (!convexUrl) {
+      return NextResponse.json(
+        { error: 'Convex URL not configured' },
+        { status: 500 }
+      );
+    }
 
-  if (!chatId || !messageId || !type) {
-    return new ChatSDKError(
-      'bad_request:api',
-      'Parameters chatId, messageId, and type are required.',
-    ).toResponse();
+    const body = await request.text();
+    
+    const response = await fetch(`${convexUrl}/api/vote`, {
+      method: 'POST', // Convex uses POST for mutations
+      headers: {
+        'Content-Type': 'application/json',
+        ...(request.headers.get('authorization') && {
+          authorization: request.headers.get('authorization')!,
+        }),
+      },
+      body,
+    });
+
+    const data = await response.json();
+    return NextResponse.json(data, { status: response.status });
+  } catch (error) {
+    console.error('Vote PATCH route error:', error);
+    return NextResponse.json(
+      { error: 'Failed to vote on message' },
+      { status: 500 }
+    );
   }
-
-  const session = await auth();
-
-  if (!session?.user) {
-    return new ChatSDKError('unauthorized:vote').toResponse();
-  }
-
-  const chat = await getChatById({ id: chatId });
-
-  if (!chat) {
-    return new ChatSDKError('not_found:vote').toResponse();
-  }
-
-  if (chat.userId !== session.user.id) {
-    return new ChatSDKError('forbidden:vote').toResponse();
-  }
-
-  await voteMessage({
-    chatId,
-    messageId,
-    type: type,
-  });
-
-  return new Response('Message voted', { status: 200 });
 }

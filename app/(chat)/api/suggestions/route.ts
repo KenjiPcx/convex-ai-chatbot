@@ -1,37 +1,37 @@
-import { auth } from '@/app/(auth)/auth';
-import { getSuggestionsByDocumentId } from '@/lib/db/queries';
-import { ChatSDKError } from '@/lib/errors';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const documentId = searchParams.get('documentId');
+// Redirect to Convex HTTP actions
+export async function POST(request: NextRequest) {
+  try {
+    const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+    
+    if (!convexUrl) {
+      return NextResponse.json(
+        { error: 'Convex URL not configured' },
+        { status: 500 }
+      );
+    }
 
-  if (!documentId) {
-    return new ChatSDKError(
-      'bad_request:api',
-      'Parameter documentId is required.',
-    ).toResponse();
+    const body = await request.text();
+    
+    const response = await fetch(`${convexUrl}/api/suggestions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(request.headers.get('authorization') && {
+          authorization: request.headers.get('authorization')!,
+        }),
+      },
+      body,
+    });
+
+    const data = await response.json();
+    return NextResponse.json(data, { status: response.status });
+  } catch (error) {
+    console.error('Suggestions route error:', error);
+    return NextResponse.json(
+      { error: 'Failed to process suggestions request' },
+      { status: 500 }
+    );
   }
-
-  const session = await auth();
-
-  if (!session?.user) {
-    return new ChatSDKError('unauthorized:suggestions').toResponse();
-  }
-
-  const suggestions = await getSuggestionsByDocumentId({
-    documentId,
-  });
-
-  const [suggestion] = suggestions;
-
-  if (!suggestion) {
-    return Response.json([], { status: 200 });
-  }
-
-  if (suggestion.userId !== session.user.id) {
-    return new ChatSDKError('forbidden:api').toResponse();
-  }
-
-  return Response.json(suggestions, { status: 200 });
 }

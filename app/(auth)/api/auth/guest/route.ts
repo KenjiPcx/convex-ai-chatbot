@@ -1,21 +1,32 @@
-import { signIn } from '@/app/(auth)/auth';
-import { isDevelopmentEnvironment } from '@/lib/constants';
-import { getToken } from 'next-auth/jwt';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const redirectUrl = searchParams.get('redirectUrl') || '/';
+// Redirect to Convex Auth HTTP actions
+export async function POST(request: NextRequest) {
+  try {
+    const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+    
+    if (!convexUrl) {
+      return NextResponse.json(
+        { error: 'Convex URL not configured' },
+        { status: 500 }
+      );
+    }
 
-  const token = await getToken({
-    req: request,
-    secret: process.env.AUTH_SECRET,
-    secureCookie: !isDevelopmentEnvironment,
-  });
+    const response = await fetch(`${convexUrl}/api/auth/guest`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({}),
+    });
 
-  if (token) {
-    return NextResponse.redirect(new URL('/', request.url));
+    const data = await response.json();
+    return NextResponse.json(data, { status: response.status });
+  } catch (error) {
+    console.error('Guest auth route error:', error);
+    return NextResponse.json(
+      { error: 'Failed to create guest user' },
+      { status: 500 }
+    );
   }
-
-  return signIn('guest', { redirect: true, redirectTo: redirectUrl });
 }

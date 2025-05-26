@@ -1,62 +1,160 @@
 <a href="https://chat.vercel.ai/">
-  <img alt="Next.js 14 and App Router-ready AI chatbot." src="app/(chat)/opengraph-image.png">
-  <h1 align="center">Chat SDK</h1>
+  <img alt="Next.js 15 and Convex-powered AI chatbot." src="app/(chat)/opengraph-image.png">
+  <h1 align="center">Convex AI Chatbot</h1>
 </a>
 
 <p align="center">
-    Chat SDK is a free, open-source template built with Next.js and the AI SDK that helps you quickly build powerful chatbot applications.
+    A modern AI chatbot built with Next.js 15, Convex, and Convex Agents for real-time AI conversations with persistent memory.
 </p>
 
 <p align="center">
-  <a href="https://chat-sdk.dev"><strong>Read Docs</strong></a> ·
   <a href="#features"><strong>Features</strong></a> ·
-  <a href="#model-providers"><strong>Model Providers</strong></a> ·
-  <a href="#deploy-your-own"><strong>Deploy Your Own</strong></a> ·
-  <a href="#running-locally"><strong>Running locally</strong></a>
+  <a href="#architecture"><strong>Architecture</strong></a> ·
+  <a href="#running-locally"><strong>Running locally</strong></a> ·
+  <a href="#deployment"><strong>Deploy</strong></a>
 </p>
 <br/>
 
 ## Features
 
-- [Next.js](https://nextjs.org) App Router
-  - Advanced routing for seamless navigation and performance
-  - React Server Components (RSCs) and Server Actions for server-side rendering and increased performance
-- [AI SDK](https://sdk.vercel.ai/docs)
-  - Unified API for generating text, structured objects, and tool calls with LLMs
-  - Hooks for building dynamic chat and generative user interfaces
-  - Supports xAI (default), OpenAI, Fireworks, and other model providers
-- [shadcn/ui](https://ui.shadcn.com)
-  - Styling with [Tailwind CSS](https://tailwindcss.com)
-  - Component primitives from [Radix UI](https://radix-ui.com) for accessibility and flexibility
-- Data Persistence
-  - [Neon Serverless Postgres](https://vercel.com/marketplace/neon) for saving chat history and user data
-  - [Vercel Blob](https://vercel.com/storage/blob) for efficient file storage
-- [Auth.js](https://authjs.dev)
-  - Simple and secure authentication
+- **🚀 Real-time AI Chat**
+  - [Convex Agents](https://labs.convex.dev/agent) with persistent memory and context
+  - Streaming responses powered by OpenAI GPT-4
+  - Automatic conversation history and recall
 
-## Model Providers
+- **⚡ Modern Stack**
+  - [Next.js 15](https://nextjs.org) with App Router and React Server Components
+  - [Convex](https://convex.dev) for real-time database and AI agents
+  - [Convex Auth](https://labs.convex.dev/auth) for seamless authentication
+  - TypeScript-first with generated types
 
-This template ships with [xAI](https://x.ai) `grok-2-1212` as the default chat model. However, with the [AI SDK](https://sdk.vercel.ai/docs), you can switch LLM providers to [OpenAI](https://openai.com), [Anthropic](https://anthropic.com), [Cohere](https://cohere.com/), and [many more](https://sdk.vercel.ai/providers/ai-sdk-providers) with just a few lines of code.
+- **🎨 Beautiful UI**
+  - [shadcn/ui](https://ui.shadcn.com) components
+  - [Tailwind CSS](https://tailwindcss.com) styling
+  - [Radix UI](https://radix-ui.com) primitives for accessibility
+  - Dark/light mode support
 
-## Deploy Your Own
+- **📱 Full-Featured Chat**
+  - File uploads and attachments
+  - Message voting and feedback
+  - Document creation and editing
+  - Real-time collaborative features
 
-You can deploy your own version of the Next.js AI Chatbot to Vercel with one click:
+## Architecture
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fai-chatbot&env=AUTH_SECRET&envDescription=Learn+more+about+how+to+get+the+API+Keys+for+the+application&envLink=https%3A%2F%2Fgithub.com%2Fvercel%2Fai-chatbot%2Fblob%2Fmain%2F.env.example&demo-title=AI+Chatbot&demo-description=An+Open-Source+AI+Chatbot+Template+Built+With+Next.js+and+the+AI+SDK+by+Vercel.&demo-url=https%3A%2F%2Fchat.vercel.ai&products=%5B%7B%22type%22%3A%22integration%22%2C%22protocol%22%3A%22ai%22%2C%22productSlug%22%3A%22grok%22%2C%22integrationSlug%22%3A%22xai%22%7D%2C%7B%22type%22%3A%22integration%22%2C%22protocol%22%3A%22storage%22%2C%22productSlug%22%3A%22neon%22%2C%22integrationSlug%22%3A%22neon%22%7D%2C%7B%22type%22%3A%22integration%22%2C%22protocol%22%3A%22storage%22%2C%22productSlug%22%3A%22upstash-kv%22%2C%22integrationSlug%22%3A%22upstash%22%7D%2C%7B%22type%22%3A%22blob%22%7D%5D)
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Next.js App  │    │  Convex HTTP    │    │ Convex Agents   │
+│                 │────│   Actions       │────│   + Memory      │
+│  (React UI)     │    │                 │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         │              ┌─────────────────┐    ┌─────────────────┐
+         └──────────────│ Convex Database │    │    OpenAI       │
+                        │                 │    │   GPT-4o        │
+                        │ (Reactive)      │    │                 │
+                        └─────────────────┘    └─────────────────┘
+```
+
+### Key Benefits
+
+- **Real-time Everything**: Database subscriptions and live updates
+- **AI-First Architecture**: Built specifically for LLM applications
+- **Zero Infrastructure**: Serverless and fully managed
+- **Type Safety**: End-to-end TypeScript with generated schemas
 
 ## Running locally
 
-You will need to use the environment variables [defined in `.env.example`](.env.example) to run Next.js AI Chatbot. It's recommended you use [Vercel Environment Variables](https://vercel.com/docs/projects/environment-variables) for this, but a `.env` file is all that is necessary.
+### Prerequisites
 
-> Note: You should not commit your `.env` file or it will expose secrets that will allow others to control access to your various AI and authentication provider accounts.
+1. **Node.js 18+** and **pnpm**
+2. **Convex account** (free at [convex.dev](https://convex.dev))
+3. **OpenAI API key** for AI functionality
 
-1. Install Vercel CLI: `npm i -g vercel`
-2. Link local instance with Vercel and GitHub accounts (creates `.vercel` directory): `vercel link`
-3. Download your environment variables: `vercel env pull`
+### Setup
 
-```bash
-pnpm install
-pnpm dev
+1. **Clone and install dependencies:**
+   ```bash
+   git clone <repository-url>
+   cd convex-ai-chatbot
+   pnpm install
+   ```
+
+2. **Set up Convex:**
+   ```bash
+   npx convex init
+   ```
+
+3. **Configure environment variables:**
+   
+   Copy `.env.example` to `.env.local` and fill in:
+   ```bash
+   # Required
+   CONVEX_DEPLOYMENT=your-deployment-name
+   NEXT_PUBLIC_CONVEX_URL=https://your-deployment.convex.cloud
+   OPENAI_API_KEY=your-openai-api-key
+   
+   # Optional
+   XAI_API_KEY=your-xai-api-key
+   ```
+
+4. **Deploy Convex schema and functions:**
+   ```bash
+   pnpm run convex:deploy
+   ```
+
+5. **Start development servers:**
+   ```bash
+   # Terminal 1: Start Convex
+   pnpm run convex:dev
+   
+   # Terminal 2: Start Next.js
+   pnpm run dev
+   ```
+
+Your app will be running at [localhost:3000](http://localhost:3000).
+
+## Deployment
+
+### Deploy to Convex + Vercel
+
+1. **Deploy Convex backend:**
+   ```bash
+   pnpm run convex:deploy
+   ```
+
+2. **Deploy Next.js frontend to Vercel:**
+   ```bash
+   vercel deploy
+   ```
+
+3. **Set environment variables in Vercel:**
+   - `CONVEX_DEPLOYMENT`
+   - `NEXT_PUBLIC_CONVEX_URL`
+   - `OPENAI_API_KEY`
+
+## Project Structure
+
+```
+├── app/                    # Next.js App Router
+├── components/             # React components
+├── convex/                 # Convex backend
+│   ├── schema.ts          # Database schema
+│   ├── agents.ts          # AI agents
+│   ├── http.ts            # HTTP endpoints
+│   └── *.ts               # Functions & mutations
+├── hooks/                  # React hooks
+└── lib/                    # Utilities
 ```
 
-Your app template should now be running on [localhost:3000](http://localhost:3000).
+## Migration from PostgreSQL + NextAuth
+
+This project was migrated from a traditional PostgreSQL + NextAuth + AI SDK setup to Convex. See [`MIGRATION.md`](./MIGRATION.md) for the complete migration guide and benefits.
+
+## Contributing
+
+We welcome contributions! Please see our contributing guidelines for more details.
+
+## License
+
+This project is licensed under the MIT License.
